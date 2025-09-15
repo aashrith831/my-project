@@ -1,0 +1,59 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include "DHT.h"
+
+// LCD setup
+LiquidCrystal_I2C lcd(0x3F, 16, 2); // Using 0x3F as the I2C address
+
+// DHT11 setup
+#define DHTPIN 2       // DHT11 data pin connected to digital pin 2
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+
+// Buzzer setup
+#define BUZZER 8       // Buzzer connected to pin 8
+
+void setup() {
+  lcd.init();
+  lcd.backlight();
+  dht.begin();
+  pinMode(BUZZER, OUTPUT);
+
+  lcd.setCursor(0,0);
+  lcd.print(" Temp Monitor ");
+  delay(2000);
+  lcd.clear();
+}
+
+void loop() {
+  float temperature = dht.readTemperature(); // Read temperature in Celsius
+
+  // Check if reading is valid
+  if (isnan(temperature)) {
+    lcd.setCursor(0,0);
+    lcd.print("Sensor Error!");
+    digitalWrite(BUZZER, LOW);
+    delay(2000);
+    return;
+  }
+
+  // Display temperature
+  lcd.setCursor(0,0);
+  lcd.print("Temp: ");
+  lcd.print(temperature);
+  lcd.print((char)223); // degree symbol
+  lcd.print("C  ");
+
+  // Check condition
+  if (temperature > 40.0) {
+    lcd.setCursor(0,1);
+    lcd.print("ALERT! HOT!   ");
+    digitalWrite(BUZZER, HIGH);
+  } else {
+    lcd.setCursor(0,1);
+    lcd.print("Normal        ");
+    digitalWrite(BUZZER, LOW);
+  }
+
+  delay(1000); // update every second
+}
